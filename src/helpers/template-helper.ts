@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import beautify from 'js-beautify';
-import helpers from './index';
+import assetHelper from './asset-helper';
 
-module.exports = {
-  render(path, locals, options) {
+export default {
+  render(path, locals, options?) {
     options = _.assign(
       {
         beautify: true,
@@ -13,7 +13,7 @@ module.exports = {
       options || {}
     );
 
-    const template = helpers.asset.read(path);
+    const template = assetHelper.read(path);
     let content = _.template(template)(locals || {});
 
     if (options.beautify) {

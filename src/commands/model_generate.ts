@@ -1,10 +1,12 @@
-import process from 'process';
 import { _baseOptions, _underscoreOption } from '../core/yargs';
-
-import helpers from '../helpers';
 import clc from 'cli-color';
+import modelHelper from '../helpers/model-helper';
+import viewHelper from '../helpers/view-helper';
+import migrationHelper from '../helpers/migration-helper';
+import pathHelper from '../helpers/path-helper';
+import { Argv } from 'yargs';
 
-exports.builder = (yargs) =>
+const builder = (yargs: Argv) =>
   _underscoreOption(
     _baseOptions(yargs)
       .option('name', {
@@ -24,29 +26,27 @@ exports.builder = (yargs) =>
       })
   ).argv;
 
-exports.handler = function (args) {
+const handler = function (args: ReturnType<typeof builder>) {
   ensureModelsFolder();
   ensureMigrationsFolder();
   checkModelFileExistence(args);
 
   try {
-    helpers.model.generateFile(args);
+    modelHelper.generateFile(args);
   } catch (err) {
-    helpers.view.error(err.message);
+    viewHelper.error(err.message);
   }
 
-  helpers.migration.generateTableCreationFile(args);
-  helpers.view.log(
+  migrationHelper.generateTableCreationFile(args);
+  viewHelper.log(
     'New model was created at',
-    clc.blueBright(helpers.path.getModelPath(args.name)),
+    clc.blueBright(pathHelper.getModelPath(args.name)),
     '.'
   );
-  helpers.view.log(
+  viewHelper.log(
     'New migration was created at',
     clc.blueBright(
-      helpers.path.getMigrationPath(
-        helpers.migration.generateMigrationName(args)
-      )
+      pathHelper.getMigrationPath(migrationHelper.generateMigrationName(args))
     ),
     '.'
   );
@@ -55,10 +55,10 @@ exports.handler = function (args) {
 };
 
 function ensureModelsFolder() {
-  if (!helpers.path.existsSync(helpers.path.getModelsPath())) {
-    helpers.view.error(
+  if (!pathHelper.existsSync(pathHelper.getModelsPath())) {
+    viewHelper.error(
       'Unable to find models path (' +
-        helpers.path.getModelsPath() +
+        pathHelper.getModelsPath() +
         '). Did you run ' +
         clc.blueBright('sequelize init') +
         '?'
@@ -67,10 +67,10 @@ function ensureModelsFolder() {
 }
 
 function ensureMigrationsFolder() {
-  if (!helpers.path.existsSync(helpers.path.getPath('migration'))) {
-    helpers.view.error(
+  if (!pathHelper.existsSync(pathHelper.getPath('migration'))) {
+    viewHelper.error(
       'Unable to find migrations path (' +
-        helpers.path.getPath('migration') +
+        pathHelper.getPath('migration') +
         '). Did you run ' +
         clc.blueBright('sequelize init') +
         '?'
@@ -78,11 +78,16 @@ function ensureMigrationsFolder() {
   }
 }
 
-function checkModelFileExistence(args) {
-  const modelPath = helpers.path.getModelPath(args.name);
+function checkModelFileExistence(args: ReturnType<typeof builder>) {
+  const modelPath = pathHelper.getModelPath(args.name);
 
-  if (args.force === undefined && helpers.model.modelFileExists(modelPath)) {
-    helpers.view.notifyAboutExistingFile(modelPath);
+  if (args.force === undefined && modelHelper.modelFileExists(modelPath)) {
+    viewHelper.notifyAboutExistingFile(modelPath);
     process.exit(1);
   }
 }
+
+export default {
+  builder,
+  handler,
+};

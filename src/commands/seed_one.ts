@@ -1,22 +1,23 @@
 import process from 'process';
 import { _baseOptions } from '../core/yargs';
 import { getMigrator } from '../core/migrator';
-
-import helpers from '../helpers';
 import path from 'path';
 import _ from 'lodash';
+import configHelper from '../helpers/config-helper';
+import viewHelper from '../helpers/view-helper';
+import umzugHelper from '../helpers/umzug-helper';
 
-exports.builder = (yargs) =>
+const builder = (yargs) =>
   _baseOptions(yargs).option('seed', {
     describe: 'List of seed files',
     type: 'array',
   }).argv;
 
-exports.handler = async function (args) {
+const handler = async function (args) {
   const command = args._[0];
 
   // legacy, gulp used to do this
-  await helpers.config.init();
+  await configHelper.init();
 
   switch (command) {
     case 'db:seed':
@@ -31,7 +32,7 @@ exports.handler = async function (args) {
 
         await migrator.up(seeds);
       } catch (e) {
-        helpers.view.error(e);
+        viewHelper.error(e);
       }
       break;
 
@@ -39,7 +40,7 @@ exports.handler = async function (args) {
       try {
         const migrator = await getMigrator('seeder', args);
         let seeders =
-          helpers.umzug.getStorage('seeder') === 'none'
+          umzugHelper.getStorage('seeder') === 'none'
             ? await migrator.pending()
             : await migrator.executed();
 
@@ -50,7 +51,7 @@ exports.handler = async function (args) {
         }
 
         if (seeders.length === 0) {
-          helpers.view.log('No seeders found.');
+          viewHelper.log('No seeders found.');
           return;
         }
 
@@ -62,10 +63,15 @@ exports.handler = async function (args) {
           migrations: _.chain(seeders).map('file').reverse().value(),
         });
       } catch (e) {
-        helpers.view.error(e);
+        viewHelper.error(e);
       }
       break;
   }
 
   process.exit(0);
+};
+
+export default {
+  builder,
+  handler,
 };

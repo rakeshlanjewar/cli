@@ -1,7 +1,7 @@
 import path from 'path';
 import _ from 'lodash';
-import helpers from './index';
 import process from 'process';
+import configHelper from './config-helper';
 
 const storage = {
   migration: 'sequelize',
@@ -18,9 +18,9 @@ const storageJsonName = {
 
 let timestampsDefault = false;
 
-module.exports = {
+export default {
   getStorageOption(property, fallback) {
-    return helpers.config.readConfig()[property] || fallback;
+    return configHelper.readConfig()[property] || fallback;
   },
 
   getStorage(type) {
@@ -40,7 +40,7 @@ module.exports = {
     );
   },
 
-  getSchema(type) {
+  getSchema(type?: string) {
     return this.getStorageOption(type + 'StorageTableSchema', undefined);
   },
 
@@ -53,7 +53,7 @@ module.exports = {
   },
 
   getStorageOptions(type, extraOptions) {
-    const options = {};
+    const options: any = {};
 
     if (this.getStorage(type) === 'json') {
       options.path = this.getStoragePath(type);

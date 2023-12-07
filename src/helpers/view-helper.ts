@@ -1,17 +1,17 @@
 import clc from 'cli-color';
 import _ from 'lodash';
-import helpers from './index';
 import getYArgs from '../core/yargs';
 import process from 'process';
+import versionHelper from './version-helper';
 
 const args = getYArgs().argv;
 
-module.exports = {
+export default {
   teaser() {
     const versions = [
-      'Node: ' + helpers.version.getNodeVersion(),
-      'CLI: ' + helpers.version.getCliVersion(),
-      'ORM: ' + helpers.version.getOrmVersion(),
+      'Node: ' + versionHelper.getNodeVersion(),
+      'CLI: ' + versionHelper.getCliVersion(),
+      'ORM: ' + versionHelper.getOrmVersion(),
     ];
 
     this.log();
@@ -19,8 +19,8 @@ module.exports = {
     this.log();
   },
 
-  log() {
-    console.log.apply(this, arguments);
+  log(...s: string[]) {
+    console.log.apply(this, s);
   },
 
   error(error) {

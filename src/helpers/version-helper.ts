@@ -1,6 +1,6 @@
 import path from 'path';
-import helpers from './index';
-import process from 'process';
+import genericHelper from './generic-helper';
+import configHelper from './config-helper';
 
 const packageJson = require(path.resolve(
   __dirname,
@@ -9,18 +9,18 @@ const packageJson = require(path.resolve(
   'package.json'
 ));
 
-module.exports = {
+export default {
   getCliVersion() {
     return packageJson.version;
   },
 
   getOrmVersion() {
-    return helpers.generic.getSequelize('package.json').version;
+    return genericHelper.getSequelize('package.json').version;
   },
 
   getDialect() {
     try {
-      return helpers.config.readConfig();
+      return configHelper.readConfig();
     } catch (e) {
       return null;
     }

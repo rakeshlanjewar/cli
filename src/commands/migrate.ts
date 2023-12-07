@@ -5,11 +5,12 @@ import {
   ensureCurrentMetaSchema,
   addTimestampsToSchema,
 } from '../core/migrator';
-
-import helpers from '../helpers';
 import _ from 'lodash';
+import { Argv } from 'yargs';
+import configHelper from '../helpers/config-helper';
+import viewHelper from '../helpers/view-helper';
 
-exports.builder = (yargs) =>
+const builder = (yargs: Argv) =>
   _baseOptions(yargs)
     .option('to', {
       describe: 'Migration name to run migrations until',
@@ -26,11 +27,11 @@ exports.builder = (yargs) =>
       conflicts: ['to', 'from'],
     }).argv;
 
-exports.handler = async function (args) {
+const handler = async function (args: ReturnType<typeof builder>) {
   const command = args._[0];
 
   // legacy, gulp used to do this
-  await helpers.config.init();
+  await configHelper.init();
 
   switch (command) {
     case 'db:migrate':
@@ -47,15 +48,20 @@ exports.handler = async function (args) {
   process.exit(0);
 };
 
-function migrate(args) {
+export default {
+  builder,
+  handler,
+};
+
+function migrate(args: ReturnType<typeof builder>) {
   return getMigrator('migration', args)
     .then((migrator) => {
       return ensureCurrentMetaSchema(migrator)
         .then(() => migrator.pending())
         .then((migrations) => {
-          const options = {};
+          const options: { to?: string; from?: string } = {};
           if (migrations.length === 0) {
-            helpers.view.log(
+            viewHelper.log(
               'No migrations were executed, database schema was already up to date.'
             );
             process.exit(0);
@@ -65,7 +71,7 @@ function migrate(args) {
               migrations.filter((migration) => migration.file === args.to)
                 .length === 0
             ) {
-              helpers.view.log(
+              viewHelper.log(
                 'No migrations were executed, database schema was already up to date.'
               );
               process.exit(0);
@@ -78,7 +84,7 @@ function migrate(args) {
                 .map((migration) => migration.file)
                 .lastIndexOf(args.from) === -1
             ) {
-              helpers.view.log(
+              viewHelper.log(
                 'No migrations were executed, database schema was already up to date.'
               );
               process.exit(0);
@@ -95,39 +101,39 @@ function migrate(args) {
           }
         });
     })
-    .catch((e) => helpers.view.error(e));
+    .catch((e) => viewHelper.error(e));
 }
 
-function migrationStatus(args) {
+function migrationStatus(args: ReturnType<typeof builder>) {
   return getMigrator('migration', args)
     .then((migrator) => {
       return ensureCurrentMetaSchema(migrator)
         .then(() => migrator.executed())
         .then((migrations) => {
           _.forEach(migrations, (migration) => {
-            helpers.view.log('up', migration.file);
+            viewHelper.log('up', migration.file);
           });
         })
         .then(() => migrator.pending())
         .then((migrations) => {
           _.forEach(migrations, (migration) => {
-            helpers.view.log('down', migration.file);
+            viewHelper.log('down', migration.file);
           });
         });
     })
-    .catch((e) => helpers.view.error(e));
+    .catch((e) => viewHelper.error(e));
 }
 
-function migrateSchemaTimestampAdd(args) {
+function migrateSchemaTimestampAdd(args: ReturnType<typeof builder>) {
   return getMigrator('migration', args)
     .then((migrator) => {
       return addTimestampsToSchema(migrator).then((items) => {
         if (items) {
-          helpers.view.log('Successfully added timestamps to MetaTable.');
+          viewHelper.log('Successfully added timestamps to MetaTable.');
         } else {
-          helpers.view.log('MetaTable already has timestamps.');
+          viewHelper.log('MetaTable already has timestamps.');
         }
       });
     })
-    .catch((e) => helpers.view.error(e));
+    .catch((e) => viewHelper.error(e));
 }

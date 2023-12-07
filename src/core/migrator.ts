@@ -1,14 +1,18 @@
 import Umzug from 'umzug';
 import _ from 'lodash';
 import process from 'process';
+import genericHelper from '../helpers/generic-helper';
+import viewHelper from '../helpers/view-helper';
+import configHelper from '../helpers/config-helper';
+import umzugHelper from '../helpers/umzug-helper';
+import pathHelper from '../helpers/path-helper';
+import versionHelper from '../helpers/version-helper';
 
-import helpers from '../helpers/index';
-
-const Sequelize = helpers.generic.getSequelize();
+const Sequelize = genericHelper.getSequelize();
 
 export function logMigrator(s) {
   if (s.indexOf('Executing') !== 0) {
-    helpers.view.log(s);
+    viewHelper.log(s);
   }
 }
 
@@ -16,9 +20,9 @@ function getSequelizeInstance() {
   let config = null;
 
   try {
-    config = helpers.config.readConfig();
+    config = configHelper.readConfig();
   } catch (e) {
-    helpers.view.error(e);
+    viewHelper.error(e);
   }
 
   config = _.defaults(config, { logging: logMigrator });
@@ -26,26 +30,26 @@ function getSequelizeInstance() {
   try {
     return new Sequelize(config);
   } catch (e) {
-    helpers.view.error(e);
+    viewHelper.error(e);
   }
 }
 
 export async function getMigrator(type, args) {
-  if (!(helpers.config.configFileExists() || args.url)) {
-    helpers.view.error(
-      `Cannot find "${helpers.config.getConfigFile()}". Have you run "sequelize init"?`
+  if (!(configHelper.configFileExists() || args.url)) {
+    viewHelper.error(
+      `Cannot find "${configHelper.getConfigFile()}". Have you run "sequelize init"?`
     );
     process.exit(1);
   }
 
   const sequelize = getSequelizeInstance();
   const migrator = new Umzug({
-    storage: helpers.umzug.getStorage(type),
-    storageOptions: helpers.umzug.getStorageOptions(type, { sequelize }),
-    logging: helpers.view.log,
+    storage: umzugHelper.getStorage(type),
+    storageOptions: umzugHelper.getStorageOptions(type, { sequelize }),
+    logging: viewHelper.log,
     migrations: {
       params: [sequelize.getQueryInterface(), Sequelize],
-      path: helpers.path.getPath(type),
+      path: pathHelper.getPath(type) as string,
       pattern: /^(?!.*\.d\.ts$).*\.(cjs|js|cts|ts)$/,
     },
   });
@@ -55,15 +59,15 @@ export async function getMigrator(type, args) {
     .then(() => {
       // Check if this is a PostgreSQL run and if there is a custom schema specified, and if there is, check if it's
       // been created. If not, attempt to create it.
-      if (helpers.version.getDialectName() === 'pg') {
-        const customSchemaName = helpers.umzug.getSchema('migration');
+      if (versionHelper.getDialectName() === 'pg') {
+        const customSchemaName = umzugHelper.getSchema('migration');
         if (customSchemaName && customSchemaName !== 'public') {
           return sequelize.createSchema(customSchemaName);
         }
       }
     })
     .then(() => migrator)
-    .catch((e) => helpers.view.error(e));
+    .catch((e) => viewHelper.error(e));
 }
 
 export function ensureCurrentMetaSchema(migrator) {
@@ -80,7 +84,7 @@ export function ensureCurrentMetaSchema(migrator) {
         return;
       } else if (columns.length === 3 && columns.indexOf('createdAt') >= 0) {
         // If found createdAt - indicate we have timestamps enabled
-        helpers.umzug.enableTimestamps();
+        umzugHelper.enableTimestamps();
         return;
       }
     })
@@ -117,7 +121,7 @@ export function addTimestampsToSchema(migrator) {
         const queryGenerator =
           queryInterface.QueryGenerator || queryInterface.queryGenerator;
         const sql = queryGenerator.selectQuery(tableName + 'Backup');
-        return helpers.generic.execQuery(sequelize, sql, {
+        return genericHelper.execQuery(sequelize, sql, {
           type: 'SELECT',
           raw: true,
         });
@@ -137,7 +141,7 @@ export function addTimestampsToSchema(migrator) {
           {
             tableName,
             timestamps: true,
-            schema: helpers.umzug.getSchema(),
+            schema: umzugHelper.getSchema(),
           }
         );
 

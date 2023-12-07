@@ -6,19 +6,19 @@ import getYArgs from '../core/yargs';
 
 const args = getYArgs().argv;
 
-const generic = {
+export default {
   getEnvironment: () => {
-    return args.env || process.env.NODE_ENV || 'development';
+    return (args.env as string) || process.env.NODE_ENV || 'development';
   },
 
-  getSequelize: (file) => {
+  getSequelize: (file?: string) => {
     const resolvePath = file ? path.join('sequelize', file) : 'sequelize';
     const resolveOptions = { basedir: process.cwd() };
 
     let sequelizePath;
 
     try {
-      sequelizePath = require.resolve(resolvePath, resolveOptions);
+      sequelizePath = require.resolve(resolvePath, resolveOptions as any);
     } catch (e) {
       // ignore error
     }
@@ -41,6 +41,3 @@ const generic = {
     }
   },
 };
-
-module.exports = generic;
-module.exports.default = generic;

@@ -1,17 +1,21 @@
 import _ from 'lodash';
-import helpers from './index';
+import genericHelper from './generic-helper';
+import templateHelper from './template-helper';
+import modelHelper from './model-helper';
+import pathHelper from './path-helper';
+import assetHelper from './asset-helper';
 
-const Sequelize = helpers.generic.getSequelize();
+const Sequelize = genericHelper.getSequelize();
 
-module.exports = {
+export default {
   getTableName(modelName) {
     return Sequelize.Utils.pluralize(modelName);
   },
 
   generateTableCreationFileContent(args) {
-    return helpers.template.render('migrations/create-table.js', {
+    return templateHelper.render('migrations/create-table.js', {
       tableName: this.getTableName(args.name),
-      attributes: helpers.model.transformAttributes(args.attributes),
+      attributes: modelHelper.transformAttributes(args.attributes),
       createdAt: args.underscored ? 'created_at' : 'createdAt',
       updatedAt: args.underscored ? 'updated_at' : 'updatedAt',
     });
@@ -23,9 +27,9 @@ module.exports = {
 
   generateTableCreationFile(args) {
     const migrationName = this.generateMigrationName(args);
-    const migrationPath = helpers.path.getMigrationPath(migrationName);
+    const migrationPath = pathHelper.getMigrationPath(migrationName);
 
-    helpers.asset.write(
+    assetHelper.write(
       migrationPath,
       this.generateTableCreationFileContent(args)
     );

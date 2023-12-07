@@ -3,14 +3,17 @@ import fs from 'fs';
 import url from 'url';
 import _ from 'lodash';
 import { promisify } from 'util';
-import helpers from './index';
 import getYArgs from '../core/yargs';
 import importHelper from './import-helper';
 import process from 'process';
+import pathHelper from './path-helper';
+import assetHelper from './asset-helper';
+import genericHelper from './generic-helper';
+import viewHelper from './view-helper';
 
-const args = getYArgs().argv;
+const args: any = getYArgs().argv;
 
-const api = {
+export default {
   config: undefined,
   rawConfig: undefined,
   error: undefined,
@@ -19,13 +22,13 @@ const api = {
 
     try {
       if (args.url) {
-        config = api.parseDbUrl(args.url);
+        config = this.parseDbUrl(args.url);
       } else {
-        const module = await importHelper.importModule(api.getConfigFile());
+        const module = await importHelper.importModule(this.getConfigFile());
         config = await module.default;
       }
     } catch (e) {
-      api.error = e;
+      this.error = e;
     }
 
     if (typeof config === 'function') {
@@ -38,9 +41,9 @@ const api = {
       }
     }
 
-    api.rawConfig = config;
+    this.rawConfig = config;
 
-    return api;
+    return this;
   },
   getConfigFile() {
     if (args.config) {
@@ -50,17 +53,17 @@ const api = {
     const defaultPath = path.resolve(process.cwd(), 'config', 'config.json');
     const alternativePath = defaultPath.replace('.json', '.js');
 
-    return helpers.path.existsSync(alternativePath)
+    return pathHelper.existsSync(alternativePath)
       ? alternativePath
       : defaultPath;
   },
 
   relativeConfigFile() {
-    return path.relative(process.cwd(), api.getConfigFile());
+    return path.relative(process.cwd(), this.getConfigFile());
   },
 
   configFileExists() {
-    return helpers.path.existsSync(api.getConfigFile());
+    return pathHelper.existsSync(this.getConfigFile());
   },
 
   getDefaultConfig() {
@@ -96,72 +99,72 @@ const api = {
   },
 
   writeDefaultConfig() {
-    const configPath = path.dirname(api.getConfigFile());
+    const configPath = path.dirname(this.getConfigFile());
 
-    if (!helpers.path.existsSync(configPath)) {
-      helpers.asset.mkdirp(configPath);
+    if (!pathHelper.existsSync(configPath)) {
+      assetHelper.mkdirp(configPath);
     }
 
-    fs.writeFileSync(api.getConfigFile(), api.getDefaultConfig());
+    fs.writeFileSync(this.getConfigFile(), this.getDefaultConfig());
   },
 
   readConfig() {
-    if (!api.config) {
-      const env = helpers.generic.getEnvironment();
+    if (!this.config) {
+      const env = genericHelper.getEnvironment();
 
-      if (api.rawConfig === undefined) {
+      if (this.rawConfig === undefined) {
         throw new Error(
           'Error reading "' +
-            api.relativeConfigFile() +
+            this.relativeConfigFile() +
             '". Error: ' +
-            api.error
+            this.error
         );
       }
 
-      if (typeof api.rawConfig !== 'object') {
+      if (typeof this.rawConfig !== 'object') {
         throw new Error(
           'Config must be an object or a promise for an object: ' +
-            api.relativeConfigFile()
+            this.relativeConfigFile()
         );
       }
 
       if (args.url) {
-        helpers.view.log(
-          'Parsed url ' + api.filteredUrl(args.url, api.rawConfig)
+        viewHelper.log(
+          'Parsed url ' + this.filteredUrl(args.url, this.rawConfig)
         );
       } else {
-        helpers.view.log(
-          'Loaded configuration file "' + api.relativeConfigFile() + '".'
+        viewHelper.log(
+          'Loaded configuration file "' + this.relativeConfigFile() + '".'
         );
       }
 
-      if (api.rawConfig[env]) {
-        helpers.view.log('Using environment "' + env + '".');
+      if (this.rawConfig[env]) {
+        viewHelper.log('Using environment "' + env + '".');
 
-        api.rawConfig = api.rawConfig[env];
+        this.rawConfig = this.rawConfig[env];
       }
 
       // The Sequelize library needs a function passed in to its logging option
-      if (api.rawConfig.logging && !_.isFunction(api.rawConfig.logging)) {
-        api.rawConfig.logging = console.log;
+      if (this.rawConfig.logging && !_.isFunction(this.rawConfig.logging)) {
+        this.rawConfig.logging = console.log;
       }
 
       // in case url is present - we overwrite the configuration
-      if (api.rawConfig.url) {
-        api.rawConfig = _.merge(
-          api.rawConfig,
-          api.parseDbUrl(api.rawConfig.url)
+      if (this.rawConfig.url) {
+        this.rawConfig = _.merge(
+          this.rawConfig,
+          this.parseDbUrl(this.rawConfig.url)
         );
-      } else if (api.rawConfig.use_env_variable) {
-        api.rawConfig = _.merge(
-          api.rawConfig,
-          api.parseDbUrl(process.env[api.rawConfig.use_env_variable])
+      } else if (this.rawConfig.use_env_variable) {
+        this.rawConfig = _.merge(
+          this.rawConfig,
+          this.parseDbUrl(process.env[this.rawConfig.use_env_variable])
         );
       }
 
-      api.config = api.rawConfig;
+      this.config = this.rawConfig;
     }
-    return api.config;
+    return this.config;
   },
 
   filteredUrl(uri, config) {
@@ -172,7 +175,7 @@ const api = {
   urlStringToConfigHash(urlString) {
     try {
       const urlParts = url.parse(urlString);
-      let result = {
+      const result: any = {
         database: urlParts.pathname.replace(/^\//, ''),
         host: urlParts.hostname,
         port: urlParts.port,
@@ -195,7 +198,7 @@ const api = {
   },
 
   parseDbUrl(urlString) {
-    let config = api.urlStringToConfigHash(urlString);
+    let config = this.urlStringToConfigHash(urlString);
 
     config = _.assign(config, {
       dialect: config.protocol,
@@ -213,5 +216,3 @@ const api = {
     return config;
   },
 };
-
-module.exports = api;

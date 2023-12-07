@@ -5,7 +5,7 @@ async function supportsDynamicImport() {
     // imports are cached.
     // no need to worry about perf here.
     // Don't remove .js: extension must be included for ESM imports!
-    await import('./dummy-file.js');
+    await import('./dummy-file');
     return true;
   } catch (e) {
     return false;
@@ -28,7 +28,7 @@ async function importModule(modulePath) {
     (await supportsDynamicImport())
   ) {
     // 'import' expects a URL. (https://github.com/sequelize/cli/issues/994)
-    return import(url.pathToFileURL(modulePath));
+    return import(modulePath);
   }
 
   // mimics what `import()` would return for
@@ -36,7 +36,7 @@ async function importModule(modulePath) {
   return { default: require(modulePath) };
 }
 
-module.exports = {
+export default {
   supportsDynamicImport,
   importModule,
 };

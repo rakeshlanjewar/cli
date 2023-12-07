@@ -1,12 +1,12 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-const assets = {
+const assetHelper = {
   copy: (from, to) => {
     fs.copySync(path.resolve(__dirname, '..', 'assets', from), to);
   },
 
-  read: (assetPath) => {
+  read: (assetPath: string) => {
     return fs
       .readFileSync(path.resolve(__dirname, '..', 'assets', assetPath))
       .toString();
@@ -22,7 +22,7 @@ const assets = {
   },
 
   injectConfigFilePath: (filePath, configPath) => {
-    this.inject(filePath, '__CONFIG_FILE__', configPath);
+    assetHelper.inject(filePath, '__CONFIG_FILE__', configPath);
   },
 
   mkdirp: (pathToCreate) => {
@@ -30,5 +30,4 @@ const assets = {
   },
 };
 
-module.exports = assets;
-module.exports.default = assets;
+export default assetHelper;

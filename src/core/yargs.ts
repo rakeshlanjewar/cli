@@ -1,5 +1,5 @@
 import fs from 'fs';
-import yargs from 'yargs';
+import yargs, { Argv } from 'yargs';
 import path from 'path';
 import process from 'process';
 
@@ -20,7 +20,7 @@ export default function getYArgs() {
   return args;
 }
 
-export function _baseOptions(yargs) {
+export function _baseOptions(yargs: Argv) {
   return yargs
     .option('env', {
       describe: 'The environment to run the command in',
@@ -62,7 +62,7 @@ export function _baseOptions(yargs) {
     });
 }
 
-export function _underscoreOption(yargs) {
+export function _underscoreOption<T>(yargs: Argv<T>): Argv<T> {
   return yargs.option('underscored', {
     describe: "Use snake case for the timestamp's attribute names",
     default: false,

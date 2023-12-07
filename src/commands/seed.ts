@@ -1,16 +1,18 @@
 import _ from 'lodash';
-import process from 'process';
 import { _baseOptions } from '../core/yargs';
 import { getMigrator } from '../core/migrator';
+import { Argv } from 'yargs';
+import configHelper from '../helpers/config-helper';
+import viewHelper from '../helpers/view-helper';
+import umzugHelper from '../helpers/umzug-helper';
 
-import helpers from '../helpers';
+const builder = (yargs: Argv) => _baseOptions(yargs).argv;
 
-exports.builder = (yargs) => _baseOptions(yargs).argv;
-exports.handler = async function (args) {
+const handler = async function (args: ReturnType<typeof builder>) {
   const command = args._[0];
 
   // legacy, gulp used to do this
-  await helpers.config.init();
+  await configHelper.init();
 
   switch (command) {
     case 'db:seed:all':
@@ -25,12 +27,12 @@ exports.handler = async function (args) {
   process.exit(0);
 };
 
-function seedAll(args) {
+function seedAll(args: ReturnType<typeof builder>) {
   return getMigrator('seeder', args)
     .then((migrator) => {
       return migrator.pending().then((seeders) => {
         if (seeders.length === 0) {
-          helpers.view.log('No seeders found.');
+          viewHelper.log('No seeders found.');
           return;
         }
 
@@ -39,19 +41,19 @@ function seedAll(args) {
         });
       });
     })
-    .catch((e) => helpers.view.error(e));
+    .catch((e) => viewHelper.error(e));
 }
 
-function seedUndoAll(args) {
+function seedUndoAll(args: ReturnType<typeof builder>) {
   return getMigrator('seeder', args)
     .then((migrator) => {
       return (
-        helpers.umzug.getStorage('seeder') === 'none'
+        umzugHelper.getStorage('seeder') === 'none'
           ? migrator.pending()
           : migrator.executed()
       ).then((seeders) => {
         if (seeders.length === 0) {
-          helpers.view.log('No seeders found.');
+          viewHelper.log('No seeders found.');
           return;
         }
 
@@ -60,5 +62,10 @@ function seedUndoAll(args) {
         });
       });
     })
-    .catch((e) => helpers.view.error(e));
+    .catch((e) => viewHelper.error(e));
 }
+
+export default {
+  builder,
+  handler,
+};

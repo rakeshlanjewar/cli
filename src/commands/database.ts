@@ -1,14 +1,15 @@
-import process from 'process';
 import { _baseOptions } from '../core/yargs';
 import { logMigrator } from '../core/migrator';
-
-import helpers from '../helpers';
 import { cloneDeep, defaults, pick } from 'lodash';
 import clc from 'cli-color';
+import { Argv } from 'yargs';
+import genericHelper from '../helpers/generic-helper';
+import configHelper from '../helpers/config-helper';
+import viewHelper from '../helpers/view-helper';
 
-const Sequelize = helpers.generic.getSequelize();
+const Sequelize = genericHelper.getSequelize();
 
-exports.builder = (yargs) =>
+const builder = (yargs: Argv) =>
   _baseOptions(yargs)
     .option('charset', {
       describe: 'Pass charset option to dialect, MYSQL only',
@@ -31,14 +32,14 @@ exports.builder = (yargs) =>
       type: 'string',
     }).argv;
 
-exports.handler = async function (args) {
+const handler = async function (args: ReturnType<typeof builder>) {
   const command = args._[0];
 
   // legacy, gulp used to do this
-  await helpers.config.init();
+  await configHelper.init();
 
   const sequelize = getDatabaseLessSequelize();
-  const config = helpers.config.readConfig();
+  const config = configHelper.readConfig();
   const options = pick(args, [
     'charset',
     'collate',
@@ -59,9 +60,9 @@ exports.handler = async function (args) {
         .query(query, {
           type: sequelize.QueryTypes.RAW,
         })
-        .catch((e) => helpers.view.error(e));
+        .catch((e) => viewHelper.error(e));
 
-      helpers.view.log('Database', clc.blueBright(config.database), 'created.');
+      viewHelper.log('Database', clc.blueBright(config.database), 'created.');
 
       break;
     case 'db:drop':
@@ -74,9 +75,9 @@ exports.handler = async function (args) {
             type: sequelize.QueryTypes.RAW,
           }
         )
-        .catch((e) => helpers.view.error(e));
+        .catch((e) => viewHelper.error(e));
 
-      helpers.view.log('Database', clc.blueBright(config.database), 'dropped.');
+      viewHelper.log('Database', clc.blueBright(config.database), 'dropped.');
 
       break;
   }
@@ -136,7 +137,7 @@ function getCreateDatabaseQuery(sequelize, config, options) {
       );
 
     default:
-      helpers.view.error(
+      viewHelper.error(
         `Dialect ${config.dialect} does not support db:create / db:drop commands`
       );
       return (
@@ -149,9 +150,9 @@ function getDatabaseLessSequelize() {
   let config = null;
 
   try {
-    config = helpers.config.readConfig();
+    config = configHelper.readConfig();
   } catch (e) {
-    helpers.view.error(e);
+    viewHelper.error(e);
   }
 
   config = cloneDeep(config);
@@ -172,7 +173,7 @@ function getDatabaseLessSequelize() {
       break;
 
     default:
-      helpers.view.error(
+      viewHelper.error(
         `Dialect ${config.dialect} does not support db:create / db:drop commands`
       );
   }
@@ -180,6 +181,11 @@ function getDatabaseLessSequelize() {
   try {
     return new Sequelize(config);
   } catch (e) {
-    helpers.view.error(e);
+    viewHelper.error(e);
   }
 }
+
+export default {
+  builder,
+  handler,
+};

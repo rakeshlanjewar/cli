@@ -1,6 +1,9 @@
-import helpers from './index';
+import assetHelper from './asset-helper';
+import genericHelper from './generic-helper';
+import pathHelper from './path-helper';
+import templateHelper from './template-helper';
 
-const Sequelize = helpers.generic.getSequelize();
+const Sequelize = genericHelper.getSequelize();
 const validAttributeFunctionType = ['array', 'enum'];
 
 /**
@@ -61,7 +64,7 @@ function formatAttributes(attribute) {
   return result;
 }
 
-module.exports = {
+export default {
   transformAttributes(flag) {
     /*
       possible flag formats:
@@ -108,7 +111,7 @@ module.exports = {
   },
 
   generateFileContent(args) {
-    return helpers.template.render('models/model.js', {
+    return templateHelper.render('models/model.js', {
       name: args.name,
       attributes: this.transformAttributes(args.attributes),
       underscored: args.underscored,
@@ -116,12 +119,12 @@ module.exports = {
   },
 
   generateFile(args) {
-    const modelPath = helpers.path.getModelPath(args.name);
+    const modelPath = pathHelper.getModelPath(args.name);
 
-    helpers.asset.write(modelPath, this.generateFileContent(args));
+    assetHelper.write(modelPath, this.generateFileContent(args));
   },
 
   modelFileExists(filePath) {
-    return helpers.path.existsSync(filePath);
+    return pathHelper.existsSync(filePath);
   },
 };

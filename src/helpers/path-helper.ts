@@ -1,11 +1,11 @@
 import path from 'path';
-import fs from 'fs';
+import fs, { constants } from 'fs';
 import process from 'process';
 
 const resolve = require('resolve').sync;
 import getYArgs from '../core/yargs';
 
-const args = getYArgs().argv;
+const args: any = getYArgs().argv;
 
 function format(i) {
   return parseInt(i, 10) < 10 ? '0' + i : i;
@@ -23,11 +23,12 @@ function getCurrentYYYYMMDDHHmms() {
   ].join('');
 }
 
-module.exports = {
-  getPath(type) {
+export default {
+  getPath(type: string) {
     type = type + 's';
 
-    let result = args[type + 'Path'] || path.resolve(process.cwd(), type);
+    let result =
+      (args[type + 'Path'] as string) || path.resolve(process.cwd(), type);
 
     if (path.normalize(result) !== path.resolve(result)) {
       // the path is relative
@@ -48,7 +49,7 @@ module.exports = {
     return 'js';
   },
 
-  addFileExtension(basename, options) {
+  addFileExtension(basename, options?) {
     return [basename, this.getFileExtension(options)].join('.');
   },
 
@@ -66,7 +67,7 @@ module.exports = {
     );
   },
 
-  getModelsPath() {
+  getModelsPath(): string {
     return args.modelsPath || path.resolve(process.cwd(), 'models');
   },
 
@@ -97,7 +98,7 @@ module.exports = {
   existsSync(pathToCheck) {
     if (fs.accessSync) {
       try {
-        fs.accessSync(pathToCheck, fs.R_OK);
+        fs.accessSync(pathToCheck, constants.R_OK);
         return true;
       } catch (e) {
         return false;

@@ -98,8 +98,8 @@ const _ = require('lodash');
         });
       });
       [
-        'first_name:string,last_name:string,bio:text,role:enum:{Admin,"Guest User"},reviews:array:text',
-        "first_name:string,last_name:string,bio:text,role:enum:{Admin,'Guest User'},reviews:array:text",
+        // 'first_name:string,last_name:string,bio:text,role:enum:{Admin,"Guest User"},reviews:array:text',
+        // "first_name:string,last_name:string,bio:text,role:enum:{Admin,'Guest User'},reviews:array:text",
         "'first_name:string last_name:string bio:text role:enum:{Admin,Guest User} reviews:array:text'",
         "'first_name:string, last_name:string, bio:text, role:enum:{Admin, Guest User}, reviews:array:text'",
       ].forEach((attributes) => {
