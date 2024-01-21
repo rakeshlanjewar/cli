@@ -8,11 +8,9 @@
     "plugin:@typescript-eslint/recommended"
   ],
   "rules": {
-    "prettier/prettier": "error",
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-var-requires": "off"
+    "prettier/prettier": "error"
   },
-  "ignorePatterns": ["test/support/tmp", "src/assets", "test/**"],
+  "ignorePatterns": ["test/support/tmp", "src/assets"],
   "parserOptions": {
     "ecmaVersion": 2020,
     "sourceType": "module"

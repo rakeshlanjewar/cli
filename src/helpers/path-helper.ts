@@ -1,13 +1,12 @@
 import path from 'path';
 import fs, { constants } from 'fs';
-import process from 'process';
-
-const resolve = require('resolve').sync;
 import getYArgs from '../core/yargs';
+import { sync as resolve } from 'resolve';
 
-const args: any = getYArgs().argv;
+const args = getYArgs().argv;
 
-function format(i) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function format(i: any) {
   return parseInt(i, 10) < 10 ? '0' + i : i;
 }
 
@@ -38,29 +37,30 @@ export default {
     return result;
   },
 
-  getFileName(type, name, options) {
+  getFileName(type: string, name: string, options?: Record<string, unknown>) {
     return this.addFileExtension(
       [getCurrentYYYYMMDDHHmms(), name ? name : 'unnamed-' + type].join('-'),
       options
     );
   },
 
-  getFileExtension() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getFileExtension(options?: Record<string, unknown>) {
     return 'js';
   },
 
-  addFileExtension(basename, options?) {
+  addFileExtension(basename: string, options?: Record<string, unknown>) {
     return [basename, this.getFileExtension(options)].join('.');
   },
 
-  getMigrationPath(migrationName) {
+  getMigrationPath(migrationName: string) {
     return path.resolve(
       this.getPath('migration'),
       this.getFileName('migration', migrationName)
     );
   },
 
-  getSeederPath(seederName) {
+  getSeederPath(seederName: string) {
     return path.resolve(
       this.getPath('seeder'),
       this.getFileName('seeder', seederName)
@@ -68,17 +68,17 @@ export default {
   },
 
   getModelsPath(): string {
-    return args.modelsPath || path.resolve(process.cwd(), 'models');
+    return (args.modelsPath as string) || path.resolve(process.cwd(), 'models');
   },
 
-  getModelPath(modelName) {
+  getModelPath(modelName: string) {
     return path.resolve(
       this.getModelsPath(),
       this.addFileExtension(modelName.toLowerCase())
     );
   },
 
-  resolve(packageName) {
+  resolve(packageName: string) {
     let result;
 
     try {
@@ -95,7 +95,7 @@ export default {
     return result;
   },
 
-  existsSync(pathToCheck) {
+  existsSync(pathToCheck: string) {
     if (fs.accessSync) {
       try {
         fs.accessSync(pathToCheck, constants.R_OK);

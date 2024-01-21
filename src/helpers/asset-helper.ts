@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 
 const assetHelper = {
-  copy: (from, to) => {
+  copy: (from: string, to: string) => {
     fs.copySync(path.resolve(__dirname, '..', 'assets', from), to);
   },
 
@@ -12,20 +12,20 @@ const assetHelper = {
       .toString();
   },
 
-  write: (targetPath, content) => {
+  write: (targetPath: string, content: string) => {
     fs.writeFileSync(targetPath, content);
   },
 
-  inject: (filePath, token, content) => {
+  inject: (filePath: string, token: string, content: string) => {
     const fileContent = fs.readFileSync(filePath).toString();
     fs.writeFileSync(filePath, fileContent.replace(token, content));
   },
 
-  injectConfigFilePath: (filePath, configPath) => {
+  injectConfigFilePath: (filePath: string, configPath: string) => {
     assetHelper.inject(filePath, '__CONFIG_FILE__', configPath);
   },
 
-  mkdirp: (pathToCreate) => {
+  mkdirp: (pathToCreate: string) => {
     fs.mkdirpSync(pathToCreate);
   },
 };

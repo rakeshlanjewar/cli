@@ -29,3 +29,4 @@ test/support/tmp/*
 # Extra files
 package-lock.json
 npm-debug.log
+tsconfig.tsbuildinfo

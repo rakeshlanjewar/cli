@@ -1,4 +1,3 @@
-import process from 'process';
 import { _baseOptions } from '../core/yargs';
 import {
   getMigrator,
@@ -59,7 +58,10 @@ function migrate(args: ReturnType<typeof builder>) {
       return ensureCurrentMetaSchema(migrator)
         .then(() => migrator.pending())
         .then((migrations) => {
-          const options: { to?: string; from?: string } = {};
+          const options: { to: string; from: string } = {
+            from: '',
+            to: '',
+          };
           if (migrations.length === 0) {
             viewHelper.log(
               'No migrations were executed, database schema was already up to date.'
@@ -68,7 +70,7 @@ function migrate(args: ReturnType<typeof builder>) {
           }
           if (args.to) {
             if (
-              migrations.filter((migration) => migration.file === args.to)
+              migrations.filter((migration) => migration.name === args.to)
                 .length === 0
             ) {
               viewHelper.log(
@@ -81,7 +83,7 @@ function migrate(args: ReturnType<typeof builder>) {
           if (args.from) {
             if (
               migrations
-                .map((migration) => migration.file)
+                .map((migration) => migration.name)
                 .lastIndexOf(args.from) === -1
             ) {
               viewHelper.log(
@@ -95,7 +97,7 @@ function migrate(args: ReturnType<typeof builder>) {
         })
         .then((options) => {
           if (args.name) {
-            return migrator.up(args.name);
+            return migrator.up({ migrations: [args.name] });
           } else {
             return migrator.up(options);
           }
@@ -111,13 +113,13 @@ function migrationStatus(args: ReturnType<typeof builder>) {
         .then(() => migrator.executed())
         .then((migrations) => {
           _.forEach(migrations, (migration) => {
-            viewHelper.log('up', migration.file);
+            viewHelper.log('up', migration.name);
           });
         })
         .then(() => migrator.pending())
         .then((migrations) => {
           _.forEach(migrations, (migration) => {
-            viewHelper.log('down', migration.file);
+            viewHelper.log('down', migration.name);
           });
         });
     })

@@ -32,7 +32,7 @@ function migrateUndo(args: ReturnType<typeof builder>) {
         })
         .then(() => {
           if (args.name) {
-            return migrator.down(args.name);
+            return migrator.down({ migrations: [args.name] });
           } else {
             return migrator.down();
           }

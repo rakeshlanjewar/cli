@@ -8,11 +8,15 @@ import assetHelper from './asset-helper';
 const Sequelize = genericHelper.getSequelize();
 
 export default {
-  getTableName(modelName) {
+  getTableName(modelName: string) {
     return Sequelize.Utils.pluralize(modelName);
   },
 
-  generateTableCreationFileContent(args) {
+  generateTableCreationFileContent(args: {
+    name: string;
+    attributes: string;
+    underscored: boolean;
+  }) {
     return templateHelper.render('migrations/create-table.js', {
       tableName: this.getTableName(args.name),
       attributes: modelHelper.transformAttributes(args.attributes),
@@ -21,11 +25,15 @@ export default {
     });
   },
 
-  generateMigrationName(args) {
+  generateMigrationName(args: { name: string }) {
     return _.trimStart(_.kebabCase('create-' + args.name), '-');
   },
 
-  generateTableCreationFile(args) {
+  generateTableCreationFile(args: {
+    name: string;
+    attributes: string;
+    underscored: boolean;
+  }) {
     const migrationName = this.generateMigrationName(args);
     const migrationPath = pathHelper.getMigrationPath(migrationName);
 

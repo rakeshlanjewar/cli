@@ -10,7 +10,7 @@ const validAttributeFunctionType = ['array', 'enum'];
  * Check the given dataType actual exists.
  * @param {string} dataType
  */
-function validateDataType(dataType) {
+function validateDataType(dataType: string) {
   if (!Sequelize.DataTypes[dataType.toUpperCase()]) {
     throw new Error(`Unknown type '${dataType}'`);
   }
@@ -18,8 +18,24 @@ function validateDataType(dataType) {
   return dataType;
 }
 
-function formatAttributes(attribute) {
-  let result;
+function formatAttributes(attribute: string): {
+  fieldName: string;
+  dataType: string;
+  dataFunction: string | null;
+  dataValues: string | null;
+} {
+  let result: {
+    fieldName: string;
+    dataType: string;
+    dataFunction: string | null;
+    dataValues: string | null;
+  } = {
+    fieldName: '',
+    dataType: '',
+    dataFunction: null,
+    dataValues: null,
+  };
+
   const split = attribute.split(':');
 
   if (split.length === 2) {
@@ -65,7 +81,7 @@ function formatAttributes(attribute) {
 }
 
 export default {
-  transformAttributes(flag) {
+  transformAttributes(flag: string) {
     /*
       possible flag formats:
       - first_name:string,last_name:string,bio:text,role:enum:{Admin, 'Guest User'},reviews:array:string
@@ -102,7 +118,7 @@ export default {
         validateDataType(formattedAttribute.dataType);
       } catch (err) {
         throw new Error(
-          `Attribute '${attribute}' cannot be parsed: ${err.message}`
+          `Attribute '${attribute}' cannot be parsed: ${(err as Error).message}`
         );
       }
 
@@ -110,7 +126,11 @@ export default {
     });
   },
 
-  generateFileContent(args) {
+  generateFileContent(args: {
+    name: string;
+    attributes: string;
+    underscored: boolean;
+  }) {
     return templateHelper.render('models/model.js', {
       name: args.name,
       attributes: this.transformAttributes(args.attributes),
@@ -118,13 +138,17 @@ export default {
     });
   },
 
-  generateFile(args) {
+  generateFile(args: {
+    name: string;
+    attributes: string;
+    underscored: boolean;
+  }) {
     const modelPath = pathHelper.getModelPath(args.name);
 
     assetHelper.write(modelPath, this.generateFileContent(args));
   },
 
-  modelFileExists(filePath) {
+  modelFileExists(filePath: string) {
     return pathHelper.existsSync(filePath);
   },
 };

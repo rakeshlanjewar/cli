@@ -34,7 +34,7 @@ const handler = function (args: ReturnType<typeof builder>) {
   try {
     modelHelper.generateFile(args);
   } catch (err) {
-    viewHelper.error(err.message);
+    viewHelper.error((err as Error).message);
   }
 
   migrationHelper.generateTableCreationFile(args);

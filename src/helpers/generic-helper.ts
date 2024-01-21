@@ -1,8 +1,7 @@
 import path from 'path';
-import process from 'process';
-
 const resolve = require('resolve').sync;
 import getYArgs from '../core/yargs';
+import { QueryOptions, Sequelize } from 'sequelize';
 
 const args = getYArgs().argv;
 
@@ -18,7 +17,9 @@ export default {
     let sequelizePath;
 
     try {
-      sequelizePath = require.resolve(resolvePath, resolveOptions as any);
+      sequelizePath = require.resolve(resolvePath, {
+        paths: [resolveOptions.basedir],
+      });
     } catch (e) {
       // ignore error
     }
@@ -33,11 +34,7 @@ export default {
     return require(sequelizePath);
   },
 
-  execQuery: (sequelize, sql, options) => {
-    if (sequelize.query.length === 2) {
-      return sequelize.query(sql, options);
-    } else {
-      return sequelize.query(sql, null, options);
-    }
+  execQuery: (sequelize: Sequelize, sql: string, options: QueryOptions) => {
+    return sequelize.query(sql, options);
   },
 };

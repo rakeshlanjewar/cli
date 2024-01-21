@@ -6,7 +6,7 @@ import pathHelper from './path-helper';
 import configHelper from './config-helper';
 import templateHelper from './template-helper';
 
-function createFolder(folderName, folder, force) {
+function createFolder(folderName: string, folder: string, force: boolean) {
   if (force && fs.existsSync(folder) === true) {
     viewHelper.log('Deleting the ' + folderName + ' folder. (--force)');
 
@@ -15,14 +15,14 @@ function createFolder(folderName, folder, force) {
         fs.unlinkSync(path.resolve(folder, filename));
       });
     } catch (e) {
-      viewHelper.error(e);
+      viewHelper.error(e as Error);
     }
 
     try {
       fs.rmdirSync(folder);
       viewHelper.log('Successfully deleted the ' + folderName + ' folder.');
     } catch (e) {
-      viewHelper.error(e);
+      viewHelper.error(e as Error);
     }
   }
 
@@ -38,7 +38,7 @@ function createFolder(folderName, folder, force) {
       );
     }
   } catch (e) {
-    viewHelper.error(e);
+    viewHelper.error(e as Error);
   }
 }
 
@@ -51,11 +51,11 @@ export default {
     createFolder('seeders', pathHelper.getPath('seeder'), force);
   },
 
-  createModelsFolder: (force) => {
+  createModelsFolder: (force: boolean) => {
     createFolder('models', pathHelper.getModelsPath(), force);
   },
 
-  createModelsIndexFile: (force) => {
+  createModelsIndexFile: (force: boolean) => {
     const modelsPath = pathHelper.getModelsPath();
     const indexPath = path.resolve(
       modelsPath,

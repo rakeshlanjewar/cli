@@ -13,13 +13,13 @@
   ],
   "dependencies": {
     "cli-color": "^2.0.3",
-    "fs-extra": "^9.1.0",
-    "js-beautify": "1.14.9",
+    "fs-extra": "^11.2.0",
+    "js-beautify": "1.14.11",
     "lodash": "^4.17.21",
-    "resolve": "^1.22.1",
-    "typescript": "5.3.2",
-    "umzug": "^2.3.0",
-    "yargs": "^16.2.0"
+    "resolve": "^1.22.8",
+    "typescript": "5.3.3",
+    "umzug": "3.5.0",
+    "yargs": "16.2.0"
   },
   "devDependencies": {
     "@babel/cli": "7.23.4",
@@ -32,8 +32,8 @@
     "@types/fs-extra": "^11.0.4",
     "@types/js-beautify": "^1.14.3",
     "@types/lodash": "^4.14.202",
+    "@types/mocha": "^9.1.1",
     "@types/resolve": "^1.20.6",
-    "@types/umzug": "^2.3.0",
     "@types/yargs": "^16.0.4",
     "@typescript-eslint/eslint-plugin": "^6.13.1",
     "@typescript-eslint/parser": "^6.13.1",
@@ -51,7 +51,7 @@
     "pg-hstore": "latest",
     "prettier": "2.8.8",
     "semver": "7.5.4",
-    "sequelize": "6.35.1",
+    "sequelize": "7.0.0-alpha.9",
     "sqlite3": "latest",
     "through2": "4.0.2"
   },

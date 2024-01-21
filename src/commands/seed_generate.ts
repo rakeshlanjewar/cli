@@ -6,15 +6,16 @@ import initHelper from '../helpers/init-helper';
 import pathHelper from '../helpers/path-helper';
 import templateHelper from '../helpers/template-helper';
 import viewHelper from '../helpers/view-helper';
+import { Argv } from 'yargs';
 
-const builder = (yargs) =>
+const builder = (yargs: Argv) =>
   _baseOptions(yargs).option('name', {
     describe: 'Defines the name of the seed',
     type: 'string',
     demandOption: true,
   }).argv;
 
-const handler = function (args) {
+const handler = function (args: ReturnType<typeof builder>) {
   initHelper.createSeedersFolder();
 
   fs.writeFileSync(

@@ -1,16 +1,17 @@
-import Umzug from 'umzug';
+import { Umzug } from 'umzug';
 import _ from 'lodash';
-import process from 'process';
 import genericHelper from '../helpers/generic-helper';
 import viewHelper from '../helpers/view-helper';
 import configHelper from '../helpers/config-helper';
 import umzugHelper from '../helpers/umzug-helper';
 import pathHelper from '../helpers/path-helper';
 import versionHelper from '../helpers/version-helper';
+import { QueryInterface } from 'sequelize';
+import { MigratorType } from '../types';
 
 const Sequelize = genericHelper.getSequelize();
 
-export function logMigrator(s) {
+export function logMigrator(s: string) {
   if (s.indexOf('Executing') !== 0) {
     viewHelper.log(s);
   }
@@ -22,7 +23,7 @@ function getSequelizeInstance() {
   try {
     config = configHelper.readConfig();
   } catch (e) {
-    viewHelper.error(e);
+    viewHelper.error(e as Error);
   }
 
   config = _.defaults(config, { logging: logMigrator });
@@ -30,11 +31,14 @@ function getSequelizeInstance() {
   try {
     return new Sequelize(config);
   } catch (e) {
-    viewHelper.error(e);
+    viewHelper.error(e as Error);
   }
 }
 
-export async function getMigrator(type, args) {
+export async function getMigrator(
+  type: MigratorType,
+  args: { url?: string }
+): Promise<Umzug> {
   if (!(configHelper.configFileExists() || args.url)) {
     viewHelper.error(
       `Cannot find "${configHelper.getConfigFile()}". Have you run "sequelize init"?`
@@ -45,13 +49,18 @@ export async function getMigrator(type, args) {
   const sequelize = getSequelizeInstance();
   const migrator = new Umzug({
     storage: umzugHelper.getStorage(type),
-    storageOptions: umzugHelper.getStorageOptions(type, { sequelize }),
-    logging: viewHelper.log,
+    // storageOptions: umzugHelper.getStorageOptions(type, { sequelize }),
+    // logging: 'error',
+    logger: undefined,
     migrations: {
-      params: [sequelize.getQueryInterface(), Sequelize],
-      path: pathHelper.getPath(type) as string,
-      pattern: /^(?!.*\.d\.ts$).*\.(cjs|js|cts|ts)$/,
+      glob: ['*.cjs|js|cts|ts', { cwd: pathHelper.getPath(type) }],
     },
+    context: { migration: sequelize.getQueryInterface(), Sequelize: Sequelize },
+    // migrations: {
+    //   params: [sequelize.getQueryInterface(), Sequelize],
+    //   path: pathHelper.getPath(type) as string,
+    //   pattern: /^(?!.*\.d\.ts$).*\.(cjs|js|cts|ts)$/,
+    // },
   });
 
   return sequelize
@@ -67,10 +76,10 @@ export async function getMigrator(type, args) {
       }
     })
     .then(() => migrator)
-    .catch((e) => viewHelper.error(e));
+    .catch((e: Error) => viewHelper.error(e));
 }
 
-export function ensureCurrentMetaSchema(migrator) {
+export function ensureCurrentMetaSchema(migrator: Umzug) {
   const queryInterface =
     migrator.options.storageOptions.sequelize.getQueryInterface();
   const tableName = migrator.options.storageOptions.tableName;
@@ -91,7 +100,7 @@ export function ensureCurrentMetaSchema(migrator) {
     .catch(() => {});
 }
 
-function ensureMetaTable(queryInterface, tableName) {
+function ensureMetaTable(queryInterface: QueryInterface, tableName: string) {
   return queryInterface.showAllTables().then((tableNames) => {
     if (tableNames.indexOf(tableName) === -1) {
       throw new Error('No MetaTable table found.');
@@ -105,7 +114,7 @@ function ensureMetaTable(queryInterface, tableName) {
  *
  * @return {Promise}
  */
-export function addTimestampsToSchema(migrator) {
+export function addTimestampsToSchema(migrator: Umzug) {
   const sequelize = migrator.options.storageOptions.sequelize;
   const queryInterface = sequelize.getQueryInterface();
   const tableName = migrator.options.storageOptions.tableName;

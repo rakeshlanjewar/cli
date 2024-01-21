@@ -1,7 +1,6 @@
 import clc from 'cli-color';
 import _ from 'lodash';
 import getYArgs from '../core/yargs';
-import process from 'process';
 import versionHelper from './version-helper';
 
 const args = getYArgs().argv;
@@ -23,37 +22,37 @@ export default {
     console.log.apply(this, s);
   },
 
-  error(error) {
-    let message = error;
-    const extraMessages = [];
+  error(error: Error | string) {
+    let message;
+    // const extraMessages = [];
 
     if (error instanceof Error) {
       message = !args.debug ? error.message : error.stack;
     }
 
-    if (args.debug && error.original) {
-      extraMessages.push(error.original.message);
-    }
+    // if (args.debug && error.original) {
+    //   extraMessages.push(error.original.message);
+    // }
 
     this.log();
     console.error(`${clc.red('ERROR:')} ${message}`);
-    if (error.original && error.original.detail) {
-      console.error(`${clc.red('ERROR DETAIL:')} ${error.original.detail}`);
-    }
+    // if (error.original && error.original.detail) {
+    //   console.error(`${clc.red('ERROR DETAIL:')} ${error.original.detail}`);
+    // }
 
-    extraMessages.forEach((message) =>
-      console.error(`${clc.red('EXTRA MESSAGE:')} ${message}`)
-    );
+    // extraMessages.forEach((message) =>
+    //   console.error(`${clc.red('EXTRA MESSAGE:')} ${message}`)
+    // );
     this.log();
 
     process.exit(1);
   },
 
-  warn(message) {
+  warn(message: string) {
     this.log(`${clc.yellow('WARNING:')} ${message}`);
   },
 
-  notifyAboutExistingFile(file) {
+  notifyAboutExistingFile(file: string) {
     this.error(
       'The file ' +
         clc.blueBright(file) +
@@ -62,7 +61,7 @@ export default {
     );
   },
 
-  pad(s, smth) {
+  pad(s: string, smth: object | number) {
     let margin = smth;
 
     if (_.isObject(margin)) {
@@ -78,6 +77,6 @@ export default {
       );
     }
 
-    return s + new Array(margin - s.length + 1).join(' ');
+    return s + new Array((margin as number) - s.length + 1).join(' ');
   },
 };

@@ -1,9 +1,9 @@
 import path from 'path';
 import _ from 'lodash';
-import process from 'process';
 import configHelper from './config-helper';
+import { MigratorType } from '../types';
 
-const storage = {
+const storage: Record<MigratorType, string> = {
   migration: 'sequelize',
   seeder: 'none',
 };
@@ -19,21 +19,22 @@ const storageJsonName = {
 let timestampsDefault = false;
 
 export default {
-  getStorageOption(property, fallback) {
-    return configHelper.readConfig()[property] || fallback;
+  getStorageOption(property: string, fallback: string | boolean | undefined) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (configHelper.readConfig() as any)[property] || fallback;
   },
 
-  getStorage(type) {
+  getStorage(type: MigratorType) {
     return this.getStorageOption(type + 'Storage', storage[type]);
   },
 
-  getStoragePath(type) {
+  getStoragePath(type: keyof typeof storageJsonName) {
     const fallbackPath = path.join(process.cwd(), storageJsonName[type]);
 
     return this.getStorageOption(type + 'StoragePath', fallbackPath);
   },
 
-  getTableName(type) {
+  getTableName(type: keyof typeof storageTableName) {
     return this.getStorageOption(
       type + 'StorageTableName',
       storageTableName[type]
@@ -48,12 +49,17 @@ export default {
     timestampsDefault = true;
   },
 
-  getTimestamps(type) {
+  getTimestamps(type: string) {
     return this.getStorageOption(type + 'Timestamps', timestampsDefault);
   },
 
-  getStorageOptions(type, extraOptions) {
-    const options: any = {};
+  getStorageOptions(type: MigratorType, extraOptions: Record<string, unknown>) {
+    const options: {
+      path?: string;
+      tableName?: string;
+      schema?: string;
+      timestamps?: string;
+    } = {};
 
     if (this.getStorage(type) === 'json') {
       options.path = this.getStoragePath(type);

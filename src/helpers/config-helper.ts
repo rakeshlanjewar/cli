@@ -1,24 +1,56 @@
 import path from 'path';
 import fs from 'fs';
-import url from 'url';
 import _ from 'lodash';
 import { promisify } from 'util';
-import getYArgs from '../core/yargs';
+import getYArgs, { _baseOptions } from '../core/yargs';
 import importHelper from './import-helper';
-import process from 'process';
 import pathHelper from './path-helper';
 import assetHelper from './asset-helper';
 import genericHelper from './generic-helper';
 import viewHelper from './view-helper';
 
-const args: any = getYArgs().argv;
+interface Config {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any; // Define a more specific type based on your config structure.
+}
 
-export default {
+export interface ParsedUrlConfig {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  database: any;
+  host: string;
+  port: string;
+  protocol: string;
+  ssl: boolean;
+  username?: string;
+  password?: string;
+  dialect: string;
+}
+
+interface ConfigHelper {
+  config: ParsedUrlConfig | undefined;
+  rawConfig: Config | undefined;
+  error: Error | undefined;
+  init: () => Promise<ConfigHelper>;
+  getConfigFile: () => string;
+  relativeConfigFile: () => string;
+  configFileExists: () => boolean;
+  getDefaultConfig: () => string;
+  writeDefaultConfig: () => void;
+  readConfig: () => ParsedUrlConfig;
+  filteredUrl: (uri: string, config: ParsedUrlConfig) => string;
+  urlStringToConfigHash: (urlString: string) => ParsedUrlConfig;
+  parseDbUrl: (urlString: string) => ParsedUrlConfig;
+}
+
+const args = _baseOptions(getYArgs()).argv;
+
+const configHelper: ConfigHelper = {
   config: undefined,
   rawConfig: undefined,
   error: undefined,
+
   async init() {
-    let config;
+    let config: Config | undefined;
 
     try {
       if (args.url) {
@@ -28,7 +60,7 @@ export default {
         config = await module.default;
       }
     } catch (e) {
-      this.error = e;
+      this.error = e as Error;
     }
 
     if (typeof config === 'function') {
@@ -43,7 +75,7 @@ export default {
 
     this.rawConfig = config;
 
-    return this;
+    return configHelper;
   },
   getConfigFile() {
     if (args.config) {
@@ -167,28 +199,28 @@ export default {
     return this.config;
   },
 
-  filteredUrl(uri, config) {
+  filteredUrl(uri: string, config: Config) {
     const regExp = new RegExp(':?' + _.escapeRegExp(config.password) + '@');
     return uri.replace(regExp, ':*****@');
   },
 
-  urlStringToConfigHash(urlString) {
+  urlStringToConfigHash(urlString: string): ParsedUrlConfig {
     try {
-      const urlParts = url.parse(urlString);
-      const result: any = {
-        database: urlParts.pathname.replace(/^\//, ''),
-        host: urlParts.hostname,
-        port: urlParts.port,
-        protocol: urlParts.protocol.replace(/:$/, ''),
-        ssl: urlParts.query ? urlParts.query.indexOf('ssl=true') >= 0 : false,
+      const urlObj = new URL(urlString);
+      const result: ParsedUrlConfig = {
+        database: urlObj.pathname.replace(/^\//, ''),
+        dialect: urlObj.pathname.replace(/^\//, ''),
+        host: urlObj.hostname,
+        port: urlObj.port,
+        protocol: urlObj.protocol.replace(/:$/, ''),
+        ssl: urlObj.searchParams.get('ssl') === 'true',
       };
 
-      if (urlParts.auth) {
-        const authParts = urlParts.auth.split(':');
-        result.username = authParts[0];
-        if (authParts.length > 1) {
-          result.password = authParts.slice(1).join(':');
-        }
+      if (urlObj.username) {
+        result.username = urlObj.username;
+      }
+      if (urlObj.password) {
+        result.password = urlObj.password;
       }
 
       return result;
@@ -197,7 +229,7 @@ export default {
     }
   },
 
-  parseDbUrl(urlString) {
+  parseDbUrl(urlString: string) {
     let config = this.urlStringToConfigHash(urlString);
 
     config = _.assign(config, {
@@ -206,7 +238,7 @@ export default {
 
     if (
       config.dialect === 'sqlite' &&
-      config.database.indexOf(':memory') !== 0
+      config?.database?.indexOf(':memory') !== 0
     ) {
       config = _.assign(config, {
         storage: '/' + config.database,
@@ -216,3 +248,5 @@ export default {
     return config;
   },
 };
+
+export default configHelper;

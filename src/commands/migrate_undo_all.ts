@@ -1,4 +1,3 @@
-import process from 'process';
 import { _baseOptions } from '../core/yargs';
 import { getMigrator, ensureCurrentMetaSchema } from '../core/migrator';
 import { Argv } from 'yargs';
@@ -8,7 +7,6 @@ import viewHelper from '../helpers/view-helper';
 const builder = (yargs: Argv) =>
   _baseOptions(yargs).option('to', {
     describe: 'Revert to the provided migration',
-    default: 0,
     type: 'string',
   }).argv;
 
@@ -21,7 +19,7 @@ const handler = async function (args: ReturnType<typeof builder>) {
   process.exit(0);
 };
 
-function migrationUndoAll(args) {
+function migrationUndoAll(args: ReturnType<typeof builder>) {
   return getMigrator('migration', args)
     .then((migrator) => {
       return ensureCurrentMetaSchema(migrator)

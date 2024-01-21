@@ -4,10 +4,15 @@ import { cloneDeep, defaults, pick } from 'lodash';
 import clc from 'cli-color';
 import { Argv } from 'yargs';
 import genericHelper from '../helpers/generic-helper';
-import configHelper from '../helpers/config-helper';
+import configHelper, { ParsedUrlConfig } from '../helpers/config-helper';
 import viewHelper from '../helpers/view-helper';
+import { Sequelize } from 'sequelize';
 
-const Sequelize = genericHelper.getSequelize();
+const SequelizeInstance = genericHelper.getSequelize();
+
+interface QueryGenerator {
+  quoteIdentifier: (identifier: string) => string;
+}
 
 const builder = (yargs: Argv) =>
   _baseOptions(yargs)
@@ -60,7 +65,7 @@ const handler = async function (args: ReturnType<typeof builder>) {
         .query(query, {
           type: sequelize.QueryTypes.RAW,
         })
-        .catch((e) => viewHelper.error(e));
+        .catch((e: Error) => viewHelper.error(e));
 
       viewHelper.log('Database', clc.blueBright(config.database), 'created.');
 
@@ -75,7 +80,7 @@ const handler = async function (args: ReturnType<typeof builder>) {
             type: sequelize.QueryTypes.RAW,
           }
         )
-        .catch((e) => viewHelper.error(e));
+        .catch((e: Error) => viewHelper.error(e));
 
       viewHelper.log('Database', clc.blueBright(config.database), 'dropped.');
 
@@ -85,10 +90,19 @@ const handler = async function (args: ReturnType<typeof builder>) {
   process.exit(0);
 };
 
-function getCreateDatabaseQuery(sequelize, config, options) {
+function getCreateDatabaseQuery(
+  sequelize: Sequelize,
+  config: ParsedUrlConfig,
+  options: {
+    encoding?: string;
+    collate?: string;
+    ctype?: string;
+    template?: string;
+    charset?: string;
+  }
+) {
   const queryInterface = sequelize.getQueryInterface();
-  const queryGenerator =
-    queryInterface.queryGenerator || queryInterface.QueryGenerator;
+  const queryGenerator = queryInterface.queryGenerator as QueryGenerator;
 
   switch (config.dialect) {
     case 'postgres':
@@ -152,7 +166,7 @@ function getDatabaseLessSequelize() {
   try {
     config = configHelper.readConfig();
   } catch (e) {
-    viewHelper.error(e);
+    viewHelper.error(e as Error);
   }
 
   config = cloneDeep(config);
@@ -179,9 +193,9 @@ function getDatabaseLessSequelize() {
   }
 
   try {
-    return new Sequelize(config);
+    return new SequelizeInstance(config);
   } catch (e) {
-    viewHelper.error(e);
+    viewHelper.error(e as Error);
   }
 }
 
